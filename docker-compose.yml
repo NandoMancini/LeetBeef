@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: duel_user
+      POSTGRES_PASSWORD: s3cret
+      POSTGRES_DB: duel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  judge0:
+    image: judge0/api:latest
+    environment:
+      - DATABASE_URL=postgres://judge0:judge0pass@postgres:5432/judge0
+    ports:
+      - "2358:2358"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
