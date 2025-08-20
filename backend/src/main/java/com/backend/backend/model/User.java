@@ -1,0 +1,28 @@
+package com.backend.backend.model;
+
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String username;
+    private String email;
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProvider authProvider;
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
+    }
+}
