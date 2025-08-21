@@ -250,4 +250,39 @@ public class RoomController {
         return ResponseEntity.ok(Map.of("message","Match successfully finished"));
     }
 
+    @PostMapping("/leave")
+    public ResponseEntity<?> leave(@RequestHeader("Authorization") String authHeader,
+                                    @RequestBody Map<String,String> b) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No Bearer token");
+        }
+
+        String token = authHeader.substring("Bearer ".length());
+
+        String difficulty = b.get("difficulty");
+        String email  = jwtService.extractUsername(token);
+        if (userRepository.findByEmail(email).isEmpty()){
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("error", "User doesn't exist"));
+        }
+        Optional<RoomMember> user = roomMemberRepository.findByEmail(email);
+        if (user.isEmpty()){
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("error", "The user with the given email is not in any room"));
+        }
+        Room room = roomService.createRoom(email, difficulty);
+        var dto = new RoomStateDTO(
+                room.getToken(),
+                "WAITING",
+                room.getDifficulty(),
+                java.time.Instant.now()
+        );
+        broker.convertAndSend("/topic/room." + room.getToken(), new WsEvent<>("ROOM_WAITING", dto));
+        return ResponseEntity
+                .status(201)
+                .body(Map.of("message", "Room created successfully"));
+    }
+
 }

@@ -17,14 +17,12 @@ services:
     ports:
       - "6379:6379"
 
-  judge0:
-    image: judge0/api:latest
-    environment:
-      - DATABASE_URL=postgres://judge0:judge0pass@postgres:5432/judge0
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "2358:2358"
-    depends_on:
-      - postgres
+      - "3000:80"
 
 volumes:
   pgdata:

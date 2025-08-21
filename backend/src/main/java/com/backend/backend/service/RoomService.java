@@ -43,4 +43,9 @@ public class RoomService {
         return room;
     }
 
+    public void leaveRoom(String email) {
+        // Remove user from room_members
+        // If they are the last ones in a room, delete the room too
+    }
+
 }

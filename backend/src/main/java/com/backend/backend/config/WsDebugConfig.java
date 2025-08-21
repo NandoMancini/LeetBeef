@@ -16,34 +16,36 @@ import java.nio.charset.StandardCharsets;
 public class WsDebugConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
-    public void configureClientOutboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new ChannelInterceptor() {
-            @Override public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                log("[STOMP OUT]", message);
-                return message;
+    public void configureClientOutboundChannel(ChannelRegistration reg) {
+        reg.interceptors(new ChannelInterceptor() {
+            @Override public Message<?> preSend(Message<?> m, MessageChannel c) {
+                log("OUT", m); return m;
             }
         });
     }
 
     @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new ChannelInterceptor() {
-            @Override public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                log("[STOMP IN ]", message);
-                return message;
+    public void configureClientInboundChannel(ChannelRegistration reg) {
+        reg.interceptors(new ChannelInterceptor() {
+            @Override public Message<?> preSend(Message<?> m, MessageChannel c) {
+                log("IN ", m); return m;
             }
         });
     }
 
     private static void log(String tag, Message<?> msg) {
+        String dest = String.valueOf(msg.getHeaders().get("simpDestination"));
         Object payload = msg.getPayload();
         String body = (payload instanceof byte[])
-                ? new String((byte[]) payload, StandardCharsets.UTF_8)
+                ? new String((byte[]) payload, java.nio.charset.StandardCharsets.UTF_8)
                 : String.valueOf(payload);
-        System.out.printf("%s dest=%s user=%s body=%s%n",
-                tag,
-                msg.getHeaders().get("simpDestination"),
-                msg.getHeaders().get("simpUser"),
-                body);
+
+        // Pretty-print JSON if possible
+        try {
+            com.google.gson.JsonElement je = com.google.gson.JsonParser.parseString(body);
+            body = new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(je);
+        } catch (Exception ignore) {}
+
+        System.out.printf("[STOMP %s] dest=%s%n%s%n", tag, dest, body);
     }
 }
